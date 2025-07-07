@@ -14,7 +14,7 @@ A minimal Neovim plugin that scans your Markdown notes for `#task` entries and w
 ### lazy.nvim
 ```lua
 {
-  "yourusername/nvim-taskscanner",
+  "clockworkpc/nvim-taskscanner",
   config = function()
     vim.api.nvim_create_user_command("WriteTasks", function()
       require("taskscanner").write_tasks()
@@ -26,7 +26,7 @@ A minimal Neovim plugin that scans your Markdown notes for `#task` entries and w
 ### packer.nvim
 ```lua
 use {
-  "yourusername/nvim-taskscanner",
+  "clockworkpc/nvim-taskscanner",
   config = function()
     vim.api.nvim_create_user_command("WriteTasks", function()
       require("taskscanner").write_tasks()
