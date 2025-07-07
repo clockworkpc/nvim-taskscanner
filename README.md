@@ -2,6 +2,8 @@
 
 A minimal Neovim plugin that scans your Markdown notes for `#task` entries and writes them into a `current_tasks.md` file in the root of your workspace.
 
+![nvim-taskrunner](https://github.com/user-attachments/assets/d1b56650-f145-476f-b206-703a3d37884d)
+
 ## ✨ Features
 - Scans all `.md` files in your current working directory
 - Finds lines that:
