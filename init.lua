@@ -1,3 +1,4 @@
+---- lua/taskscanner/init.lua
 local M = {}
 
 function M.write_tasks()
@@ -35,5 +36,9 @@ function M.write_tasks()
     vim.notify("Failed to open " .. output_file, vim.log.levels.ERROR)
   end
 end
+
+vim.api.nvim_create_user_command("WriteTasks", function()
+  require("taskscanner").write_tasks()
+end, {})
 
 return M
