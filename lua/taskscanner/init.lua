@@ -6,10 +6,12 @@ function M.setup(opts)
 end
 
 function M.write_tasks()
-  local notes_dir = config.notes_dir
+  local notes_dir = require("taskscanner.config").notes_dir
   local output_file = notes_dir .. "/current_tasks.md"
-  local lines_set = {}
-  local lines = {}
+
+  local urgent_tasks = {}
+  local normal_tasks = {}
+  local seen = {}
 
   local grep_cmd = "grep -r --include='*.md' '#task' " .. notes_dir .. " | grep -v 'current_tasks.md'"
   local handle = io.popen(grep_cmd)
@@ -18,15 +20,33 @@ function M.write_tasks()
       local content = line:match("^[^:]*:(.*)")
       if content then
         content = vim.trim(content)
-        if content:match("^%- %[ %]") and content:match("#task") then
-          if not lines_set[content] then
-            lines_set[content] = true
-            table.insert(lines, content)
+        if content:match("^%- %[ %]") and content:match("#task") and not seen[content] then
+          seen[content] = true
+          if content:match("#urgent") then
+            table.insert(urgent_tasks, content)
+          else
+            table.insert(normal_tasks, content)
           end
         end
       end
     end
     handle:close()
+  end
+
+  table.sort(urgent_tasks)
+  table.sort(normal_tasks)
+
+  local lines = {}
+  if #urgent_tasks > 0 then
+    table.insert(lines, "## Urgent Tasks")
+    vim.list_extend(lines, urgent_tasks)
+    table.insert(lines, "") -- blank line
+  end
+
+  if #normal_tasks > 0 then
+    table.insert(lines, "## Tasks")
+    vim.list_extend(lines, normal_tasks)
+    table.insert(lines, "")
   end
 
   local file = io.open(output_file, "w")
