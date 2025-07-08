@@ -37,66 +37,67 @@ function M.write_tasks()
   end
 end
 
-local function escape_lua_pattern(s)
-  return s:gsub("([^%w])", "%%%1")
-end
-
 function M.sync_completed_tasks()
   local project_root = vim.fn.getcwd()
   local task_file = project_root .. "/current_tasks.md"
 
-  -- Step 1: Read completed tasks from current_tasks.md
+  -- Step 1: Extract completed task bodies
   local completed_tasks = {}
-  local file = io.open(task_file, "r")
-  if file then
-    for line in file:lines() do
-      local task_text = line:match("^%- %[Xx%] (.*)")
-      if task_text then
-        completed_tasks[task_text] = true
+  local f = io.open(task_file, "r")
+  if f then
+    for line in f:lines() do
+      local body = line:match("^%- %[X%] (.*)")
+      if body then
+        completed_tasks[body] = true
       end
     end
-    file:close()
+    f:close()
+  else
+    vim.notify("Failed to read current_tasks.md", vim.log.levels.ERROR)
+    return
   end
 
-  -- Step 2: Search and update matching tasks in other files
-  for task_text, _ in pairs(completed_tasks) do
-    local grep_cmd = "grep -rl --include='*.md' " ..
-        vim.fn.shellescape(task_text) .. " " .. project_root .. " | grep -v 'current_tasks.md'"
-    local handle = io.popen(grep_cmd)
-    if handle then
-      for filename in handle:lines() do
-        local modified = false
-        local lines = {}
-        local f = io.open(filename, "r")
-        if f then
-          for line in f:lines() do
-            local pattern = "^%- %[ %] " .. escape_lua_pattern(task_text)
-            if line:match(pattern) then
-              table.insert(lines, "- [X] " .. task_text)
-              modified = true
-            else
-              table.insert(lines, line)
-            end
-          end
-          f:close()
-        end
+  -- Step 2: Scan files containing '#task' except current_tasks.md
+  local grep_cmd = "grep -rl --include='*.md' '#task' " .. project_root .. " | grep -v current_tasks.md"
+  local handle = io.popen(grep_cmd)
+  if not handle then
+    vim.notify("Failed to run grep", vim.log.levels.ERROR)
+    return
+  end
 
-        if modified then
-          local wf = io.open(filename, "w")
-          if wf then
-            for _, l in ipairs(lines) do
-              wf:write(l .. "\n")
-            end
-            wf:close()
-            vim.notify("Updated completed task in: " .. filename, vim.log.levels.INFO)
-          end
+  for filename in handle:lines() do
+    local updated_lines = {}
+    local changed = false
+
+    local rf = io.open(filename, "r")
+    if rf then
+      for line in rf:lines() do
+        local match = line:match("^%- %[ %] (.*)")
+        if match and completed_tasks[match] then
+          table.insert(updated_lines, "- [X] " .. match)
+          changed = true
+        else
+          table.insert(updated_lines, line)
         end
       end
-      handle:close()
+      rf:close()
+    end
+
+    if changed then
+      local wf = io.open(filename, "w")
+      if wf then
+        for _, l in ipairs(updated_lines) do
+          wf:write(l .. "\n")
+        end
+        wf:close()
+        vim.notify("✔ Updated: " .. filename, vim.log.levels.INFO)
+      else
+        vim.notify("✘ Failed to write to: " .. filename, vim.log.levels.ERROR)
+      end
     end
   end
 
-  -- Step 3: Rebuild the current task list
+  handle:close()
   M.write_tasks()
 end
 
