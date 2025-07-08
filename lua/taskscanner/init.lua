@@ -1,13 +1,17 @@
----- lua/taskscanner/init.lua
+local config = require("taskscanner.config")
 local M = {}
 
+function M.setup(opts)
+  require("taskscanner.config").setup(opts or {})
+end
+
 function M.write_tasks()
-  local project_root = vim.fn.getcwd()
-  local output_file = project_root .. "/current_tasks.md"
+  local notes_dir = config.notes_dir
+  local output_file = notes_dir .. "/current_tasks.md"
   local lines_set = {}
   local lines = {}
 
-  local grep_cmd = "grep -r --include='*.md' '#task' " .. project_root .. " | grep -v 'current_tasks.md'"
+  local grep_cmd = "grep -r --include='*.md' '#task' " .. notes_dir .. " | grep -v 'current_tasks.md'"
   local handle = io.popen(grep_cmd)
   if handle then
     for line in handle:lines() do
@@ -38,8 +42,9 @@ function M.write_tasks()
 end
 
 function M.sync_completed_tasks()
-  local project_root = vim.fn.getcwd()
-  local task_file = project_root .. "/current_tasks.md"
+  local notes_config = require("config.notes")
+  local notes_dir = notes_config.notes_dir
+  local task_file = notes_dir .. "/current_tasks.md"
 
   -- Step 1: Extract completed task bodies
   local completed_tasks = {}
@@ -58,7 +63,7 @@ function M.sync_completed_tasks()
   end
 
   -- Step 2: Scan files containing '#task' except current_tasks.md
-  local grep_cmd = "grep -rl --include='*.md' '#task' " .. project_root .. " | grep -v current_tasks.md"
+  local grep_cmd = "grep -rl --include='*.md' '#task' " .. notes_dir .. " | grep -v 'current_tasks.md'"
   local handle = io.popen(grep_cmd)
   if not handle then
     vim.notify("Failed to run grep", vim.log.levels.ERROR)

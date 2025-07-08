@@ -1,0 +1,2 @@
+- [ ] #task Read Chapter 3
+- [ ] #task Fix nvim config
