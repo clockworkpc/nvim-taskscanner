@@ -5,10 +5,13 @@ end, {})
 vim.api.nvim_create_autocmd("BufWritePost", {
   pattern = "current_tasks.md",
   callback = function()
-    require("taskscanner").sync_completed_tasks()
+    vim.defer_fn(function()
+      local taskscanner = require("taskscanner")
+      local completed = taskscanner.write_tasks()
+      taskscanner.sync_completed_tasks(completed)
+    end, 100)
   end,
 })
-
 -- When saving any other markdown file: refresh the task list
 vim.api.nvim_create_autocmd("BufWritePost", {
   pattern = "*.md",
