@@ -60,7 +60,7 @@ function M.sync_completed_tasks(completed_tasks)
   end
 
   handle:close()
-  return true
+  return completed_tasks
 end
 
 return M

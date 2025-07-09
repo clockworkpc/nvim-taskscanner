@@ -8,7 +8,7 @@ vim.api.nvim_create_autocmd("BufWritePost", {
     vim.defer_fn(function()
       local ts = require("taskscanner")
       local completed = ts.sync_completed_tasks() -- update origin
-      ts.write_tasks()                            -- regenerate from origin
+      ts.write_tasks(completed)                   -- regenerate from origin
     end, 100)
   end,
 })

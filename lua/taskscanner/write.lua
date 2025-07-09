@@ -1,8 +1,10 @@
 local M = {}
 
-function M.write_tasks()
+function M.write_tasks(completed)
+  completed = completed or {}
+
   local notes_config = require("configs.notes")
-  local notes_dir = notes_config.notes_dir:gsub("^~", os.getenv("HOME"))
+  local notes_dir = notes_config.notes_dir:gsub("^~", os.getenv("HOME") or "")
   local output_file = notes_dir .. "/current_tasks.md"
 
   local urgent_tasks = {}
@@ -22,7 +24,7 @@ function M.write_tasks()
         local is_task = content:match("#task")
         local is_urgent = content:match("#urgent")
 
-        if is_unchecked and is_task and not seen[content] then
+        if is_unchecked and is_task and not seen[content] and not completed[content] then
           seen[content] = true
           if is_urgent then
             table.insert(urgent_tasks, content)
