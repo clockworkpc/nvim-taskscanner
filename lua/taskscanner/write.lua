@@ -1,8 +1,8 @@
 local M = {}
 local util = require("taskscanner.util")
 
-function M.write_tasks(completed)
-  completed = completed or {}
+function M.write_tasks(completed_tasks)
+  completed_tasks = completed_tasks or {}
 
   local notes_config = require("configs.notes")
   local notes_dir = notes_config.notes_dir:gsub("^~", os.getenv("HOME") or "")
@@ -11,29 +11,30 @@ function M.write_tasks(completed)
   local urgent_tasks = {}
   local normal_tasks = {}
   local seen = {}
+  local task_sources = {}
 
   local grep_cmd = "grep -r --include='*.md' '#task' " .. notes_dir
   local handle = io.popen(grep_cmd)
 
   if handle then
     for line in handle:lines() do
-      local content = line:match("^[^:]*:(.*)")
-      if content then
+      local filename, content = line:match("^(.-):(.*)$")
+      if content and filename then
         content = vim.trim(content)
 
         local is_unchecked = content:match("^%- %[ %]")
         local is_task = content:match("#task")
         local is_urgent = content:match("#urgent")
+        local norm = util.normalize_task_line(content)
 
-        if is_unchecked and is_task and not seen[content] then
-          local norm = util.normalize_task_line(content)
-          if not completed[norm] then
-            seen[content] = true
-            if is_urgent then
-              table.insert(urgent_tasks, content)
-            else
-              table.insert(normal_tasks, content)
-            end
+        if is_unchecked and is_task and not completed_tasks[norm] and not seen[norm] then
+          seen[norm] = true
+          task_sources[norm] = filename
+
+          if is_urgent then
+            table.insert(urgent_tasks, content)
+          else
+            table.insert(normal_tasks, content)
           end
         end
       end
@@ -67,6 +68,9 @@ function M.write_tasks(completed)
   else
     vim.notify("Failed to open " .. output_file, vim.log.levels.ERROR)
   end
+
+  return task_sources
+end task_sources
 end
 
 return M
