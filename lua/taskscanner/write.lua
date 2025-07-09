@@ -70,7 +70,6 @@ function M.write_tasks(completed_tasks)
   end
 
   return task_sources
-end task_sources
 end
 
 return M
