@@ -74,10 +74,8 @@ function M.write_tasks()
   return completed_tasks
 end
 
-
 function M.sync_completed_tasks(completed_tasks)
   if not completed_tasks then
-    -- fallback: warn and exit
     vim.notify("No completed_tasks cache provided", vim.log.levels.ERROR)
     return
   end
@@ -125,51 +123,6 @@ function M.sync_completed_tasks(completed_tasks)
   end
 
   handle:close()
-end
-  end
-
-  -- Step 2: Scan files containing '#task' except current_tasks.md
-  local grep_cmd = "grep -rl --include='*.md' '#task' " .. notes_dir .. " | grep -v 'current_tasks.md'"
-  local handle = io.popen(grep_cmd)
-  if not handle then
-    vim.notify("Failed to run grep", vim.log.levels.ERROR)
-    return
-  end
-
-  for filename in handle:lines() do
-    local updated_lines = {}
-    local changed = false
-
-    local rf = io.open(filename, "r")
-    if rf then
-      for line in rf:lines() do
-        local match = line:match("^%- %[ %] (.*)")
-        if match and completed_tasks[match] then
-          table.insert(updated_lines, "- [X] " .. match)
-          changed = true
-        else
-          table.insert(updated_lines, line)
-        end
-      end
-      rf:close()
-    end
-
-    if changed then
-      local wf = io.open(filename, "w")
-      if wf then
-        for _, l in ipairs(updated_lines) do
-          wf:write(l .. "\n")
-        end
-        wf:close()
-        vim.notify("✔ Updated: " .. filename, vim.log.levels.INFO)
-      else
-        vim.notify("✘ Failed to write to: " .. filename, vim.log.levels.ERROR)
-      end
-    end
-  end
-
-  handle:close()
-  M.write_tasks()
 end
 
 return M
