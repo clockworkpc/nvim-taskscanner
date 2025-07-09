@@ -1,7 +1,7 @@
 local M = {}
 
 -- Default notes directory
-M.notes_dir = vim.fn.expand("~/Dropbox/Documents")
+M.notes_dir = vim.fn.expand(os.getenv("HOME") .. "/Dropbox/Documents")
 
 -- Utility to check if path is a directory
 local function is_dir(path)
