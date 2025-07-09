@@ -62,7 +62,7 @@ function M.write_tasks()
 end
 
 function M.sync_completed_tasks()
-  local notes_config = require("config.notes")
+  local notes_config = require("configs.notes")
   local notes_dir = notes_config.notes_dir
   local task_file = notes_dir .. "/current_tasks.md"
 
