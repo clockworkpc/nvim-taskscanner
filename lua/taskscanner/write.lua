@@ -2,29 +2,32 @@ local M = {}
 
 function M.write_tasks()
   local notes_config = require("configs.notes")
-  local notes_dir = notes_config.notes_dir
+  local notes_dir = notes_config.notes_dir:gsub("^~", os.getenv("HOME"))
   local output_file = notes_dir .. "/current_tasks.md"
 
-  local urgent_tasks, normal_tasks, seen, completed_tasks = {}, {}, {}, {}
+  local urgent_tasks = {}
+  local normal_tasks = {}
+  local seen = {}
 
   local grep_cmd = "grep -r --include='*.md' '#task' " .. notes_dir
   local handle = io.popen(grep_cmd)
+
   if handle then
     for line in handle:lines() do
       local content = line:match("^[^:]*:(.*)")
       if content then
         content = vim.trim(content)
-        if content:match("^%- %[ %]") and content:match("#task") and not seen[content] then
+
+        local is_unchecked = content:match("^%- %[ %]")
+        local is_task = content:match("#task")
+        local is_urgent = content:match("#urgent")
+
+        if is_unchecked and is_task and not seen[content] then
           seen[content] = true
-          if content:match("#urgent") then
+          if is_urgent then
             table.insert(urgent_tasks, content)
           else
             table.insert(normal_tasks, content)
-          end
-        elseif content:match("^%- %[X%]") then
-          local body = content:match("^%- %[X%] (.*)")
-          if body then
-            completed_tasks[body] = true
           end
         end
       end
@@ -50,20 +53,14 @@ function M.write_tasks()
 
   local file = io.open(output_file, "w")
   if file then
-    for _, l in ipairs(lines) do
-      file:write(l .. "\n")
-      local body = l:match("^%- %[X%] (.*)")
-      if body then
-        completed_tasks[body] = true
-      end
+    for _, line in ipairs(lines) do
+      file:write(line .. "\n")
     end
     file:close()
     vim.notify("Task list written to: " .. output_file, vim.log.levels.INFO)
   else
     vim.notify("Failed to open " .. output_file, vim.log.levels.ERROR)
   end
-
-  return completed_tasks
 end
 
 return M
