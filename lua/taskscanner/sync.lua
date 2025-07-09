@@ -1,4 +1,5 @@
 local M = {}
+local util = require("taskscanner.util")
 
 function M.sync_completed_tasks(completed_tasks)
   local notes_config = require("configs.notes")
@@ -11,7 +12,8 @@ function M.sync_completed_tasks(completed_tasks)
       for line in f:lines() do
         local body = line:match("^%- %[X%] (.*)")
         if body then
-          completed_tasks[body] = true
+          local norm = util.normalize_task_line(line)
+          completed_tasks[norm] = true
         end
       end
       f:close()
