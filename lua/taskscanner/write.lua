@@ -20,11 +20,12 @@ function M.write_tasks(completed)
       if content then
         content = vim.trim(content)
 
+        local norm = content:gsub("#%w+", ""):gsub("%p", ""):gsub("%s+", " "):lower():match("^%s*(.-)%s*$")
         local is_unchecked = content:match("^%- %[ %]")
         local is_task = content:match("#task")
         local is_urgent = content:match("#urgent")
 
-        if is_unchecked and is_task and not seen[content] and not completed[content] then
+        if is_unchecked and is_task and not seen[content] and not completed[norm] then
           seen[content] = true
           if is_urgent then
             table.insert(urgent_tasks, content)

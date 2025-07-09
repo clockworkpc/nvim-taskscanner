@@ -35,7 +35,8 @@ function M.sync_completed_tasks(completed_tasks)
     if rf then
       for line in rf:lines() do
         local match = line:match("^%- %[ %] (.*#task.*)")
-        if match and completed_tasks[match] then
+        local norm = match and match:gsub("#%w+", ""):gsub("%p", ""):gsub("%s+", " "):lower():match("^%s*(.-)%s*$")
+        if match and completed_tasks[norm] then
           table.insert(updated_lines, "- [X] " .. match)
           changed = true
         else
