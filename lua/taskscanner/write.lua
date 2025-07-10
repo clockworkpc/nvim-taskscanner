@@ -1,9 +1,7 @@
 local M = {}
 local util = require("taskscanner.util")
 
-function M.write_tasks(completed_tasks)
-  completed_tasks = completed_tasks or {}
-
+function M.write_tasks()
   local notes_config = require("configs.notes")
   local notes_dir = notes_config.notes_dir:gsub("^~", os.getenv("HOME") or "")
   local output_file = notes_dir .. "/current_tasks.md"
@@ -11,9 +9,12 @@ function M.write_tasks(completed_tasks)
   local urgent_tasks = {}
   local normal_tasks = {}
   local seen = {}
+  local completed = {}
   local task_sources = {}
 
-  local grep_cmd = "grep -r --include='*.md' '#task' " .. notes_dir
+  -- Read all tasks (checked and unchecked)
+  local grep_cmd = "grep -r --include='*.md' '#task' " .. notes_dir .. " | grep -v 'current_tasks.md'"
+
   local handle = io.popen(grep_cmd)
 
   if handle then
@@ -22,19 +23,21 @@ function M.write_tasks(completed_tasks)
       if content and filename then
         content = vim.trim(content)
 
-        local is_unchecked = content:match("^%- %[ %]")
         local is_task = content:match("#task")
-        local is_urgent = content:match("#urgent")
-        local norm = util.normalize_task_line(content)
-
-        if is_unchecked and is_task and not completed_tasks[norm] and not seen[norm] then
-          seen[norm] = true
-          task_sources[norm] = filename
-
-          if is_urgent then
-            table.insert(urgent_tasks, content)
-          else
-            table.insert(normal_tasks, content)
+        if is_task then
+          local norm = util.normalize_task_line(content)
+          if content:match("^%- %[X%]") then
+            completed[norm] = true
+          elseif content:match("^%- %[ %]") then
+            if not completed[norm] and not seen[norm] then
+              seen[norm] = true
+              task_sources[norm] = filename
+              if content:match("#urgent") then
+                table.insert(urgent_tasks, content)
+              else
+                table.insert(normal_tasks, content)
+              end
+            end
           end
         end
       end
