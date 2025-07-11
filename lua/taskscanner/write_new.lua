@@ -97,16 +97,22 @@ function M.write_all_sections(lines, tasks_by_tag)
     end
   end
 
-  -- Write #urgent first if present
-  if tasks_by_tag["urgent"] then
-    write_tag_section("urgent", tasks_by_tag["urgent"])
+  -- Canonicalize tags
+  local normalized = {}
+  for tag, val in pairs(tasks_by_tag) do
+    normalized[tag:lower()] = { tag = tag, value = val }
   end
 
-  -- Write all other tags (excluding "urgent" and "Untagged") sorted
+  -- Write #urgent section first
+  if normalized["urgent"] then
+    write_tag_section(normalized["urgent"].tag, normalized["urgent"].value)
+  end
+
+  -- Sort and write other tags (excluding "urgent" and "Untagged")
   local tags = {}
-  for tag in pairs(tasks_by_tag) do
-    if tag ~= "urgent" and tag ~= "Untagged" then
-      table.insert(tags, tag)
+  for key, data in pairs(normalized) do
+    if key ~= "urgent" and key ~= "untagged" then
+      table.insert(tags, data.tag)
     end
   end
   table.sort(tags)
@@ -115,7 +121,7 @@ function M.write_all_sections(lines, tasks_by_tag)
     write_tag_section(tag, tasks_by_tag[tag])
   end
 
-  -- Write untagged last
+  -- Write "Untagged" section last
   if tasks_by_tag["Untagged"] then
     write_tag_section("Untagged", tasks_by_tag["Untagged"])
   end

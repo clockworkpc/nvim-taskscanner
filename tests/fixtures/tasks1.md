@@ -3,3 +3,4 @@
 - [ ] #task buy groceries
 - [ ] #task prepare launch #urgent #pdi
 - [X] #task old completed task #work
+- [ ] #task exciting new task #ai

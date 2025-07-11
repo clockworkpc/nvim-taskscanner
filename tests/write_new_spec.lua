@@ -37,6 +37,8 @@ describe("write_new_tasks", function()
       "- [ ] #task buy groceries",            -- untagged
       "- [ ] #task prepare launch #urgent #pdi",
       "- [X] #task old completed task #work", -- should be ignored
+      "- [ ] #task exciting new task #ai",    -- should be ignored
+
     })
   end)
 
@@ -50,6 +52,9 @@ describe("write_new_tasks", function()
       "",
       "### Pdi",
       "- [ ] prepare launch",
+      "",
+      "## Ai",
+      "- [ ] exciting new task",
       "",
       "## Work",
       "- [ ] fix bug in module",

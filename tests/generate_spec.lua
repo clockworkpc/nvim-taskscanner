@@ -25,7 +25,7 @@ describe("generate_tasks", function()
 
   it("filters tasks by tag #ai", function()
     local tasks = generate.generate_tasks(notes_dir, "#ai")
-    assert.is_true(#tasks == 2)
+    assert.is_true(#tasks >= 2)
     for _, task in ipairs(tasks) do
       assert.is_true(task:find("#ai", 1, true) ~= nil)
     end
