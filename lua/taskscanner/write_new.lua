@@ -1,119 +1,153 @@
 local M = {}
 local util = require("taskscanner.util")
 
--- local function pascal_case(tag)
---   return tag:gsub("#", ""):gsub("_(%l)", function(c)
---     return c:upper()
---   end):gsub("^%l", string.upper)
--- end
+-- write function to add tasks to table from filepath
 
--- local function is_dir(path)
---   local stat = vim.loop.fs_stat(path)
---   return stat and stat.type == "directory"
--- end
+function M.add_tasks_to_table(files, filepath, notes_dir)
+  if filepath then
+    -- Convert relative to absolute path
+    if not filepath:match("^/") then
+      local cwd = assert(io.popen("pwd")):read("*l")
+      filepath = cwd .. "/" .. filepath
+    end
 
-function M.write_new_tasks()
+    -- Check if the file exists
+    local f = io.open(filepath, "r")
+    if f then
+      f:close()
+      table.insert(files, filepath)
+      return
+    else
+      print("FILEPATH NOT FOUND, falling back to scanning notes_dir")
+    end
+  end
+
+  -- Fallback: scan all markdown files in notes_dir
+  local handle = io.popen("find " .. notes_dir .. " -name '*.md' ! -name 'current_tasks.md'")
+  if not handle then
+    vim.notify("taskscanner: failed to scan notes dir", vim.log.levels.ERROR)
+    return {}
+  end
+  for line in handle:lines() do
+    table.insert(files, line)
+  end
+  handle:close()
+end
+
+function M.write_section(lines, header, tasks)
+  table.insert(lines, header)
+  if #tasks > 0 then
+    table.sort(tasks)
+    for _, task in ipairs(tasks) do
+      table.insert(lines, task)
+    end
+  end
+  table.insert(lines, "") -- always add a blank line
+end
+
+function M.write_nested_tag(lines, tag, content)
+  local flat_tasks = {}
+  local subtags = {}
+
+  for k, v in pairs(content) do
+    if type(k) == "string" then
+      table.insert(subtags, k)
+    elseif type(k) == "number" then
+      table.insert(flat_tasks, v)
+    end
+  end
+
+  table.sort(subtags)
+
+  M.write_section(lines, "## " .. tag, flat_tasks)
+
+  for _, sub in ipairs(subtags) do
+    M.write_section(lines, "### " .. sub, content[sub])
+  end
+end
+
+function M.write_all_sections(lines, tasks_by_tag)
+  -- Write untagged first
+  M.write_section(lines, "## Untagged", tasks_by_tag["Untagged"] or {})
+
+  -- Get and sort tag keys
+  local tags = {}
+  for tag in pairs(tasks_by_tag) do
+    if tag ~= "Untagged" then
+      table.insert(tags, tag)
+    end
+  end
+  table.sort(tags)
+
+  -- Now iterate in sorted order
+  for _, tag in ipairs(tags) do
+    local content = tasks_by_tag[tag]
+    if vim.tbl_islist(content) then
+      M.write_section(lines, "## " .. tag, content)
+    else
+      local flat_tasks = {}
+      local subtags = {}
+
+      for k, v in pairs(content) do
+        if type(k) == "string" then
+          table.insert(subtags, k)
+        elseif type(k) == "number" then
+          table.insert(flat_tasks, v)
+        end
+      end
+
+      table.sort(subtags)
+
+      if #flat_tasks > 0 then
+        M.write_section(lines, "## " .. tag, flat_tasks)
+      else
+        table.insert(lines, "## " .. tag)
+        table.insert(lines, "")
+      end
+
+      for _, sub in ipairs(subtags) do
+        M.write_section(lines, "### " .. sub, content[sub])
+      end
+    end
+  end
+end
+
+function M.write_new_tasks(filepath)
   local notes_config = require("configs.notes")
   local notes_dir = notes_config.notes_dir:gsub("^~", os.getenv("HOME") or "")
-  local output_file = notes_dir .. "/current_tasks.md"
 
   if not util.is_dir(notes_dir) then
     vim.notify("taskscanner: notes_dir does not exist: " .. notes_dir, vim.log.levels.ERROR)
     return {}
   end
 
-  local tasks_by_tag = { Untagged = {} }
+  local output_file = notes_dir .. "/current_tasks.md"
+  local task_sources = {}
   local seen = {}
   local completed = {}
+  local tasks_by_tag = { Untagged = {} }
+  local files = {}
 
-  local grep_cmd = "grep -r --include='*.md' '#task' " .. notes_dir .. " | grep -v 'current_tasks.md'"
-  local handle = io.popen(grep_cmd)
-  if not handle then
-    vim.notify("taskscanner: failed to run grep", vim.log.levels.ERROR)
-    return {}
+  M.add_tasks_to_table(files, filepath, notes_dir)
+
+  for _, file in ipairs(files) do
+    util.process_file(file, seen, completed, task_sources, tasks_by_tag)
   end
-
-  for line in handle:lines() do
-    local filename, content = line:match("^(.-):(.*)$")
-    if filename and content then
-      content = vim.trim(content)
-      local is_completed = content:match("^%- %[X%]")
-      local is_task = content:match("^%- %[ %] #task")
-      if is_task then
-        local norm = util.normalize_task_line(content)
-        if is_completed then
-          completed[norm] = true
-        elseif not seen[norm] and not completed[norm] then
-          seen[norm] = true
-
-          -- Extract tags excluding #task
-          local tags = {}
-          for tag in content:gmatch("#%w+") do
-            if tag ~= "#task" then
-              table.insert(tags, tag)
-            end
-          end
-
-          -- Strip tags from content
-          local cleaned = content:gsub("#%w+", ""):gsub("%s+$", "")
-
-          if #tags == 0 then
-            table.insert(tasks_by_tag["Untagged"], cleaned)
-          elseif #tags == 1 then
-            local key = util.pascal_case(tags[1])
-            tasks_by_tag[key] = tasks_by_tag[key] or {}
-            table.insert(tasks_by_tag[key], cleaned)
-          elseif #tags >= 2 then
-            local top = util.pascal_case(tags[1])
-            local sub = util.pascal_case(tags[2])
-            tasks_by_tag[top] = tasks_by_tag[top] or {}
-            tasks_by_tag[top][sub] = tasks_by_tag[top][sub] or {}
-            table.insert(tasks_by_tag[top][sub], cleaned)
-          end
-        end
-      end
-    end
-  end
-  handle:close()
-
   -- Write the sorted output
   local lines = {}
-
-  local function write_section(header, tasks)
-    if #tasks > 0 then
-      table.insert(lines, header)
-      table.sort(tasks)
-      for _, task in ipairs(tasks) do
-        table.insert(lines, task)
-      end
-      table.insert(lines, "")
-    end
-  end
-
-  -- Write untagged
-  write_section("## Untagged", tasks_by_tag["Untagged"] or {})
-
-  for tag, content in pairs(tasks_by_tag) do
-    if tag ~= "Untagged" then
-      if vim.tbl_islist(content) then
-        write_section("## " .. tag, content)
-      else
-        local subtags = vim.tbl_keys(content)
-        table.sort(subtags)
-        table.insert(lines, "## " .. tag)
-        for _, sub in ipairs(subtags) do
-          write_section("### " .. sub, content[sub])
-        end
-      end
-    end
-  end
+  M.write_all_sections(lines, tasks_by_tag)
 
   local file = io.open(output_file, "w")
   if file then
-    for _, line in ipairs(lines) do
-      file:write(line .. "\n")
+    for i, line in ipairs(lines) do
+      if i < #lines then
+        file:write(line .. "\n")
+      else
+        file:write(line) -- no newline after last non-empty line
+      end
     end
     file:close()
+
     vim.notify("taskscanner: tasks written to " .. output_file, vim.log.levels.INFO)
   else
     vim.notify("taskscanner: failed to open " .. output_file, vim.log.levels.ERROR)

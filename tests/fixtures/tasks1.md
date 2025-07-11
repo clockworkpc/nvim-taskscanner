@@ -1,0 +1,5 @@
+- [ ] #task fix bug in module #work
+- [ ] #task refactor database #work #backend_team
+- [ ] #task buy groceries
+- [ ] #task prepare launch #urgent #pdi
+- [X] #task old completed task #work

@@ -1,7 +1,20 @@
 ---@diagnostic disable: undefined-global, unused-local, cast-local-type, assign-type-mismatch
+
+-- Ensure local plugin source is discoverable by busted
+do
+  local project_lua_path = "./lua/?.lua;./lua/?/init.lua"
+  if not package.path:find(project_lua_path, 1, true) then
+    package.path = package.path .. ";" .. project_lua_path
+  end
+end
+
 -- 🧱 Minimal vim global mock
 _G.vim = {
   loop = {
+    os_getenv = os.getenv,
+    cwd = function()
+      return vim._mock_cwd or os.getenv("PWD") or "."
+    end,
     fs_stat = function(path)
       -- Customize per test
       if path == "tests/fixtures" then
@@ -29,6 +42,38 @@ _G.vim = {
       table.insert(dst, v)
     end
   end,
+  tbl_islist = function(t)
+    if type(t) ~= "table" then return false end
+    local i = 0
+    for k in pairs(t) do
+      i = i + 1
+      if k ~= i then return false end
+    end
+    return true
+  end,
+  tbl_keys = function(t)
+    local keys = {}
+    for k, _ in pairs(t) do
+      table.insert(keys, k)
+    end
+    return keys
+  end,
+  split = function(str, sep, opts)
+    local result = {}
+    sep = sep or "\n"
+    local pattern = "([^" .. sep .. "]*)"
+
+    for part in str:gmatch(pattern .. sep) do
+      table.insert(result, part)
+    end
+
+    -- Check if the string ends with the separator
+    if str:sub(- #sep) == sep then
+      table.insert(result, "")
+    end
+
+    return result
+  end
 }
 
 -- 🧼 Reset modules between tests
