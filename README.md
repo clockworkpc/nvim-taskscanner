@@ -1,98 +1,117 @@
 # nvim-taskscanner
 
-A minimal Neovim plugin that scans your Markdown notes for `#task` entries and writes them into a `current_tasks.md` file in the root of your workspace.
+A minimal Neovim plugin that scans your Markdown notes for `#task` entries and generates a deduplicated task list. Perfect for Obsidian-style workflows or plain Markdown task tracking.
 
-![nvim-taskrunner](https://github.com/user-attachments/assets/d1b56650-f145-476f-b206-703a3d37884d)
+![screenshot](https://github.com/user-attachments/assets/d1b56650-f145-476f-b206-703a3d37884d)
 
 ## ✨ Features
 
 * Scans all `.md` files in your notes directory
 * Finds lines that:
 
-  * Contain `#task`
-  * Begin with `- [ ]` (unchecked tasks only)
-* Outputs them to a deduplicated list in `current_tasks.md`
-* Optionally syncs checked-off tasks back to their source files
+  * Start with `- [ ]` or `- [X]`
+  * Include `#task` or other custom tags
+* Generates a clean `current_tasks.md` file with deduplicated tasks
+* Supports tag filtering (e.g., `#urgent`)
+* Syncs completed tasks back to their original files
+* Configurable and scriptable from Lua
 
 ## 📦 Installation
 
-### lazy.nvim
+### Using `lazy.nvim`
 
 ```lua
 {
   "clockworkpc/nvim-taskscanner",
   config = function()
     require("taskscanner").setup({
-      notes_dir = "~/Dropbox/Documents", -- Optional: default is this path
+      notes_dir = "~/Dropbox/Documents", -- optional, defaults to this
     })
 
     vim.api.nvim_create_user_command("WriteTasks", function()
       require("taskscanner").write_tasks()
     end, {})
+
+    vim.api.nvim_create_user_command("SyncCompletedTasks", function()
+      require("taskscanner").sync_completed_tasks()
+    end, {})
   end,
 }
 ```
 
-### packer.nvim
+### Using `packer.nvim`
 
 ```lua
 use {
   "clockworkpc/nvim-taskscanner",
   config = function()
     require("taskscanner").setup({
-      notes_dir = "~/Dropbox/Documents", -- Optional: customize your notes path
+      notes_dir = "~/Dropbox/Documents"
     })
 
     vim.api.nvim_create_user_command("WriteTasks", function()
       require("taskscanner").write_tasks()
     end, {})
+
+    vim.api.nvim_create_user_command("SyncCompletedTasks", function()
+      require("taskscanner").sync_completed_tasks()
+    end, {})
   end
 }
 ```
 
+## 🧠 Usage
+
+Run the following commands inside Neovim:
+
+* `:WriteTasks`
+  Scans your notes and writes deduplicated tasks to `current_tasks.md`.
+
+* `:SyncCompletedTasks`
+  Scans `current_tasks.md` and syncs completed tasks (`- [X]`) back to their source files.
+
 ## 🛠 Configuration
 
-You can customize the base directory where your Markdown notes live by passing a `notes_dir` option to `setup()`:
+You can set your `notes_dir` on setup. This directory will be recursively scanned for `.md` files.
 
 ```lua
 require("taskscanner").setup({
-  notes_dir = "~/my/notes/folder", -- Will be created if it doesn't exist
+  notes_dir = "~/my/markdown/notes",
 })
 ```
 
-If `notes_dir` is not set, the plugin defaults to `~/Dropbox/Documents`.
+## 🧪 Development Notes
 
-## 🧠 Usage
+Functions are modular and testable:
 
-```vim
-:WriteTasks
+* `generate_tasks(notes_dir, tag)`
+  Returns a filtered list of tasks by optional `tag` (e.g., `#urgent`).
+
+* `write_tasks()`
+  Writes all matching tasks to `current_tasks.md`.
+
+* `sync_completed_tasks()`
+  Marks completed tasks in their original files.
+
+## 🗃 File Structure
+
+```
+plugin/
+  taskscanner.lua       -- Autoload entrypoint
+lua/taskscanner/
+  init.lua              -- Setup + exports
+  generate.lua          -- Task scanner and formatter
+  write.lua             -- Writes task file
+  sync.lua              -- Syncs completed tasks
+  util.lua              -- Utility functions
 ```
 
-This generates (or updates) a `current_tasks.md` file in your `notes_dir` with all matching unchecked `#task` entries.
+## 📁 Example Task Format
 
-## 📁 Example
-
-Scattered input:
-
-```markdown
-- [ ] #task Read Chapter 3
-- [ ] #task Fix nvim config
+```md
+- [ ] fix bug in module #task #urgent
+- [X] write documentation #task
 ```
 
-Output:
-
-```markdown
-- [ ] #task Read Chapter 3
-- [ ] #task Fix nvim config
-```
-
-## 🔒 Excludes
-
-* Completed tasks (`- [x]`)
-* The `current_tasks.md` file itself (to avoid recursion)
-
----
-
-PRs and improvements welcome.
-**taskscanner** – simple task aggregation for your Markdown notes.
-
+## ✅ License
+GPLv3
