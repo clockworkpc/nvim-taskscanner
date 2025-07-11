@@ -17,7 +17,7 @@ function M.write_new_tasks()
   local notes_dir = notes_config.notes_dir:gsub("^~", os.getenv("HOME") or "")
   local output_file = notes_dir .. "/current_tasks.md"
 
-  if not is_dir(notes_dir) then
+  if not util.is_dir(notes_dir) then
     vim.notify("taskscanner: notes_dir does not exist: " .. notes_dir, vim.log.levels.ERROR)
     return {}
   end
@@ -60,12 +60,12 @@ function M.write_new_tasks()
           if #tags == 0 then
             table.insert(tasks_by_tag["Untagged"], cleaned)
           elseif #tags == 1 then
-            local key = pascal_case(tags[1])
+            local key = util.pascal_case(tags[1])
             tasks_by_tag[key] = tasks_by_tag[key] or {}
             table.insert(tasks_by_tag[key], cleaned)
           elseif #tags >= 2 then
-            local top = pascal_case(tags[1])
-            local sub = pascal_case(tags[2])
+            local top = util.pascal_case(tags[1])
+            local sub = util.pascal_case(tags[2])
             tasks_by_tag[top] = tasks_by_tag[top] or {}
             tasks_by_tag[top][sub] = tasks_by_tag[top][sub] or {}
             table.insert(tasks_by_tag[top][sub], cleaned)
