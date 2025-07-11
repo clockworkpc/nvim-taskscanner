@@ -11,9 +11,7 @@ vim.api.nvim_create_autocmd("BufWritePost", {
   callback = function()
     vim.defer_fn(function()
       local ts = require("taskscanner")
-      -- ts.write_tasks()            -- step 1: get map
-      ts.sync_completed_tasks() -- step 2: update sources
-      -- ts.write_tasks()                            -- step 3: rebuild view
+      ts.sync_completed_tasks()
     end, 100)
   end,
 })
