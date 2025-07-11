@@ -12,7 +12,7 @@ _G.vim = {
   },
   notify = function(msg, level)
     -- You can log if needed
-    print("vim.notify:", msg, level)
+    -- print("vim.notify:", msg, level)
   end,
   log = {
     levels = {
