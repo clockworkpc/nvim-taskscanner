@@ -67,21 +67,7 @@ function M.write_nested_tag(lines, tag, content)
 end
 
 function M.write_all_sections(lines, tasks_by_tag)
-  -- Write untagged first
-  M.write_section(lines, "## Untagged", tasks_by_tag["Untagged"] or {})
-
-  -- Get and sort tag keys
-  local tags = {}
-  for tag in pairs(tasks_by_tag) do
-    if tag ~= "Untagged" then
-      table.insert(tags, tag)
-    end
-  end
-  table.sort(tags)
-
-  -- Now iterate in sorted order
-  for _, tag in ipairs(tags) do
-    local content = tasks_by_tag[tag]
+  local function write_tag_section(tag, content)
     if vim.tbl_islist(content) then
       M.write_section(lines, "## " .. tag, content)
     else
@@ -109,6 +95,29 @@ function M.write_all_sections(lines, tasks_by_tag)
         M.write_section(lines, "### " .. sub, content[sub])
       end
     end
+  end
+
+  -- Write #urgent first if present
+  if tasks_by_tag["urgent"] then
+    write_tag_section("urgent", tasks_by_tag["urgent"])
+  end
+
+  -- Write all other tags (excluding "urgent" and "Untagged") sorted
+  local tags = {}
+  for tag in pairs(tasks_by_tag) do
+    if tag ~= "urgent" and tag ~= "Untagged" then
+      table.insert(tags, tag)
+    end
+  end
+  table.sort(tags)
+
+  for _, tag in ipairs(tags) do
+    write_tag_section(tag, tasks_by_tag[tag])
+  end
+
+  -- Write untagged last
+  if tasks_by_tag["Untagged"] then
+    write_tag_section("Untagged", tasks_by_tag["Untagged"])
   end
 end
 

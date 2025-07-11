@@ -46,9 +46,6 @@ describe("write_new_tasks", function()
     local lines = read_file(output_file)
 
     assert.same({
-      "## Untagged",
-      "- [ ] buy groceries",
-      "",
       "## Urgent",
       "",
       "### Pdi",
@@ -59,6 +56,9 @@ describe("write_new_tasks", function()
       "",
       "### BackendTeam",
       "- [ ] refactor database",
+      "",
+      "## Untagged",
+      "- [ ] buy groceries",
       "",
     }, lines)
   end)
