@@ -10,13 +10,13 @@ function M.normalize_task_line(line)
   return body
 end
 
-local function pascal_case(tag)
+function M.pascal_case(tag)
   return tag:gsub("#", ""):gsub("_(%l)", function(c)
     return c:upper()
   end):gsub("^%l", string.upper)
 end
 
-local function is_dir(path)
+function M.is_dir(path)
   local stat = vim.loop.fs_stat(path)
   return stat and stat.type == "directory"
 end
