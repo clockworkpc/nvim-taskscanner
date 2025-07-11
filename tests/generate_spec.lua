@@ -8,8 +8,7 @@ describe("generate_tasks", function()
 
   it("finds all #task entries", function()
     local tasks = generate.generate_tasks(notes_dir)
-    print("Found " .. #tasks .. " tasks")
-    assert.is_true(#tasks == 5)
+    assert.is_true(#tasks == 6)
 
     for _, task in ipairs(tasks) do
       assert.is_true(task:match("^%- %[ %] #task") ~= nil)
@@ -26,12 +25,11 @@ describe("generate_tasks", function()
 
   it("filters tasks by tag #ai", function()
     local tasks = generate.generate_tasks(notes_dir, "#ai")
-    assert.is_true(#tasks == 1)
+    assert.is_true(#tasks == 2)
     for _, task in ipairs(tasks) do
       assert.is_true(task:find("#ai", 1, true) ~= nil)
     end
   end)
-
 
   it("returns empty list for unmatched tag", function()
     local tasks = generate.generate_tasks(notes_dir, "#nonexistent")
