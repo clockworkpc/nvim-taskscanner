@@ -1,5 +1,6 @@
-- [ ] #task Important task #urgent
-- [ ] #task Normal task
+- [ ] #task Important Task 1 #urgent
+- [ ] #task Normal task 2
 - [ ] Just a note, not a task
 - [ ] #task Some task related to AI #ai
 - [ ] #task Some task related to AI #ai
+- [X] #task This task is completed

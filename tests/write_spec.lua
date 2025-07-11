@@ -87,8 +87,6 @@ describe("write_tasks", function()
 		if not ok then
 			print("❌ write_tasks threw an error:")
 			print(result)
-		else
-			print("✅ write_tasks executed successfully")
 		end
 
 		assert.are.same(true, ok)
@@ -99,9 +97,7 @@ describe("write_tasks", function()
 		end
 
 		for task, path in pairs(result) do
-			print(string.format("[✓] %s -> %s", task, path))
 			assert.is_string(task)
-
 			assert.is_string(path)
 			assert.is_truthy(path:match("%.md$"))
 		end
