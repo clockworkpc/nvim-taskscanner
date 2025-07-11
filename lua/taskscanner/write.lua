@@ -23,7 +23,6 @@ function M.write_tasks()
   local completed = {}
   local task_sources = {}
 
-  -- Read all tasks (checked and unchecked)
   local grep_cmd = "grep -r --include='*.md' '#task' " .. notes_dir .. " | grep -v 'current_tasks.md'"
 
   local handle = io.popen(grep_cmd)
@@ -78,16 +77,9 @@ function M.write_tasks()
       file:write(line .. "\n")
     end
     file:close()
-    -- vim.notify("Task list written to: " .. output_file, vim.log.levels.INFO)
   else
     vim.notify("Failed to open " .. output_file, vim.log.levels.ERROR)
   end
-
-  -- print("Task sources:")
-  -- for task, source in pairs(task_sources) do
-  --   print(task .. " -> " .. source)
-  -- end
-
   return task_sources
 end
 
