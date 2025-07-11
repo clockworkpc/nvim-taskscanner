@@ -2,6 +2,11 @@ vim.api.nvim_create_user_command("WriteTasks", function()
   require("taskscanner").write_tasks()
 end, {})
 
+-- vim.api.nvim_create_user_command("WriteNewTasks", function()
+--   require("taskscanner").write_tasks()
+-- end, {})
+
+
 vim.api.nvim_create_user_command("SyncTasks", function()
   require("taskscanner").sync_completed_tasks()
 end, {})
