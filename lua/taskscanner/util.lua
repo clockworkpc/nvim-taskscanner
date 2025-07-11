@@ -3,17 +3,11 @@ local M = {}
 function M.normalize_task_line(line)
   return line
       :gsub("^%- %[.?.%] ?", "") -- Strip checkbox
-      :gsub("#%w+", "")        -- Remove tags
-      :gsub("%s+", " ")        -- Normalize whitespace
-      :lower()                 -- Case-insensitive
-      :match("^%s*(.-)%s*$")   -- Trim edges
+      :gsub("#%w+", "")          -- Remove tags
+      :gsub("%s+", " ")          -- Normalize whitespace
+      :lower()                   -- Case-insensitive
+      :match("^%s*(.-)%s*$")     -- Trim edges
 end
-
--- function M.pascal_case(tag)
---   return tag:gsub("#", ""):gsub("_(%l)", function(c)
---     return c:upper()
---   end):gsub("^%l", string.upper)
--- end
 
 function M.pascal_case(tag)
   return tag:gsub("^#", "")        -- remove leading '#'
