@@ -1,0 +1,4 @@
+- [ ] #task Reply to lawyer #urgent
+- [X] #task Review code changes
+- [ ] Just a note, not a task
+- [ ] #task Prepare for meeting #urgent

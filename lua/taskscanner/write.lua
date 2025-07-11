@@ -4,6 +4,17 @@ local util = require("taskscanner.util")
 function M.write_tasks()
   local notes_config = require("configs.notes")
   local notes_dir = notes_config.notes_dir:gsub("^~", os.getenv("HOME") or "")
+
+  local function is_dir(path)
+    local stat = vim.loop.fs_stat(path)
+    return stat and stat.type == "directory"
+  end
+
+  if not is_dir(notes_dir) then
+    vim.notify("taskscanner: notes_dir does not exist: " .. notes_dir, vim.log.levels.ERROR)
+    return {}
+  end
+
   local output_file = notes_dir .. "/current_tasks.md"
 
   local urgent_tasks = {}
@@ -67,10 +78,15 @@ function M.write_tasks()
       file:write(line .. "\n")
     end
     file:close()
-    vim.notify("Task list written to: " .. output_file, vim.log.levels.INFO)
+    -- vim.notify("Task list written to: " .. output_file, vim.log.levels.INFO)
   else
     vim.notify("Failed to open " .. output_file, vim.log.levels.ERROR)
   end
+
+  -- print("Task sources:")
+  -- for task, source in pairs(task_sources) do
+  --   print(task .. " -> " .. source)
+  -- end
 
   return task_sources
 end
