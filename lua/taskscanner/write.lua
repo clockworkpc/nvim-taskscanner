@@ -163,9 +163,9 @@ function M.write_tasks(filepath)
     end
     file:close()
 
-    vim.notify("taskscanner: tasks written to " .. output_file, vim.log.levels.INFO)
+    -- vim.notify("taskscanner: tasks written to " .. output_file, vim.log.levels.INFO)
   else
-    vim.notify("taskscanner: failed to open " .. output_file, vim.log.levels.ERROR)
+    -- vim.notify("taskscanner: failed to open " .. output_file, vim.log.levels.ERROR)
   end
 end
 
