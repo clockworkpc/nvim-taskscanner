@@ -68,7 +68,7 @@ end
 
 function M.write_all_sections(lines, tasks_by_tag)
   local function write_tag_section(tag, content)
-    if vim.tbl_islist(content) then
+    if vim.islist(content) then
       M.write_section(lines, "## " .. tag, content)
     else
       local flat_tasks = {}
