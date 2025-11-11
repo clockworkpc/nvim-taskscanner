@@ -2,8 +2,8 @@ local M = {}
 
 function M.normalize_task_line(line)
   return line
-      :gsub("^%- %[.?.%] ?", "") -- Strip checkbox
-      :gsub("#%w+", "")          -- Remove tags
+      :gsub("^%- %[.?%] ?", "")  -- Strip checkbox
+      :gsub("#[%w_]+", "")       -- Remove tags (including underscores)
       :gsub("%s+", " ")          -- Normalize whitespace
       :lower()                   -- Case-insensitive
       :match("^%s*(.-)%s*$")     -- Trim edges
@@ -34,7 +34,7 @@ end
 
 function M.clean_task_line(line)
   return line
-      :gsub("#[%w_]+", "")
+      :gsub("#[%w_]+", "")       -- Remove tags (including underscores)
       :gsub("%s+", " ")
       :match("^%s*(.-)%s*$")
 end
