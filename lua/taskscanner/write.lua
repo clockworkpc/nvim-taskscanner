@@ -3,35 +3,27 @@ local util = require("taskscanner.util")
 
 -- write function to add tasks to table from filepath
 
-function M.add_tasks_to_table(files, filepath, notes_dir)
-  if filepath then
-    -- Convert relative to absolute path
-    if not filepath:match("^/") then
-      local cwd = assert(io.popen("pwd")):read("*l")
-      filepath = cwd .. "/" .. filepath
-    end
+function M.add_tasks_to_table(files, filepath)
+  if not filepath then return end
 
-    -- Check if the file exists
-    local f = io.open(filepath, "r")
-    if f then
-      f:close()
-      table.insert(files, filepath)
-      return
-    else
-      print("FILEPATH NOT FOUND, falling back to scanning notes_dir")
+  if type(filepath) == "table" then
+    for _, fp in ipairs(filepath) do
+      M.add_tasks_to_table(files, fp)
     end
+    return
   end
 
-  -- Fallback: scan all markdown files in notes_dir
-  local handle = io.popen("find " .. notes_dir .. " -name '*.md' ! -name 'current_tasks.md'")
-  if not handle then
-    vim.notify("taskscanner: failed to scan notes dir", vim.log.levels.ERROR)
-    return {}
+  -- Convert relative to absolute path
+  if not filepath:match("^/") then
+    local cwd = assert(io.popen("pwd")):read("*l")
+    filepath = cwd .. "/" .. filepath
   end
-  for line in handle:lines() do
-    table.insert(files, line)
+
+  local f = io.open(filepath, "r")
+  if f then
+    f:close()
+    table.insert(files, filepath)
   end
-  handle:close()
 end
 
 function M.write_section(lines, header, tasks)
@@ -143,7 +135,7 @@ function M.write_tasks(filepath)
   local tasks_by_tag = { Untagged = {} }
   local files = {}
 
-  M.add_tasks_to_table(files, filepath, notes_dir)
+  M.add_tasks_to_table(files, filepath)
 
   for _, file in ipairs(files) do
     util.process_file(file, seen, completed, task_sources, tasks_by_tag)

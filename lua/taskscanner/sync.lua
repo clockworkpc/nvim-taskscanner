@@ -30,7 +30,10 @@ function M.sync_completed_tasks()
     return completed_tasks
   end
 
+  local source_files = {}
   for filename in handle:lines() do
+    table.insert(source_files, filename)
+
     local lines = {}
     local changed = false
 
@@ -69,7 +72,7 @@ function M.sync_completed_tasks()
   end
 
   handle:close()
-  require("taskscanner.write").write_tasks()
+  require("taskscanner.write").write_tasks(source_files)
 end
 
 return M

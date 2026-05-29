@@ -1,5 +1,5 @@
 vim.api.nvim_create_user_command("WriteTasks", function()
-  require("taskscanner").write_tasks()
+  require("taskscanner").write_tasks(vim.api.nvim_buf_get_name(0))
 end, {})
 
 -- vim.api.nvim_create_user_command("WriteNewTasks", function()
@@ -21,11 +21,3 @@ vim.api.nvim_create_autocmd("BufWritePost", {
   end,
 })
 
-vim.api.nvim_create_autocmd("BufWritePost", {
-  pattern = "*.md",
-  callback = function(args)
-    if not args.file:match("current_tasks.md$") then
-      require("taskscanner").write_tasks()
-    end
-  end,
-})
